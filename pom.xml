@@ -6,7 +6,7 @@
 
     <groupId>com.github.lwr</groupId>
     <artifactId>tomcat-custom-loader</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0.6.0</version>
     <packaging>jar</packaging>
 
     <name>Tomcat8 Custom ClassLoader</name>
