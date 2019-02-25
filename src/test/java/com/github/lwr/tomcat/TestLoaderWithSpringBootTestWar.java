@@ -54,5 +54,12 @@ public class TestLoaderWithSpringBootTestWar extends TestCustomWebappClassLoader
         unpackWARs = false;
         loaderClass = CustomWebappClassLoader.class.getName();
         testWebappClassLoader();
+
+        String unzippedDir = home + "/tmp/tomcat-webapp-loader-test/work/spring-boot-deployment-test-tomcat-1.5.7.RELEASE";
+        assertEquals(Arrays.asList(
+                new URL("jar:file:" + warPath + "!/WEB-INF/classes/"),
+                new URL("file:" + unzippedDir + "/WEB-INF/lib/spring-beans-4.3.11.RELEASE.jar"),
+                new URL("file:" + unzippedDir + "/WEB-INF/lib/jcl-over-slf4j-1.7.25.jar")
+        ), Arrays.asList(loader.getURLs()).subList(0, 3));
     }
 }
