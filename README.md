@@ -52,7 +52,7 @@ Then
 3. add this line to `context.xml`
 
    ```xml
-   <Loader loaderClass="com.github.lwr.tomcat8.CustomWebappClassLoader"/>
+   <Loader loaderClass="com.github.lwr.tomcat.CustomWebappClassLoader"/>
    ```
 
    (after edited)
@@ -63,7 +63,7 @@ Then
        ... ...
    
        <!-- Bellow is the added new line -->
-       <Loader loaderClass="com.github.lwr.tomcat8.CustomWebappClassLoader"/>
+       <Loader loaderClass="com.github.lwr.tomcat.CustomWebappClassLoader"/>
    </Context>
    ```
 4. start / restart your tomcat to check the load time

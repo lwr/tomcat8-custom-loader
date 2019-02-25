@@ -1,4 +1,4 @@
-package com.github.lwr.tomcat8;
+package com.github.lwr.tomcat;
 
 import org.apache.catalina.Engine;
 import org.apache.catalina.core.StandardContext;
@@ -10,62 +10,25 @@ import org.apache.catalina.loader.WebappClassLoaderBase;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.Tomcat;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.io.*;
 import java.net.*;
 
 /**
- * TestTomcat8ClassLoader.
+ * TestCustomWebappClassLoader.
  *
  * @author <a href="mailto:williamleung2006@gmail.com">William Leung</a>
  */
-public class TestCustomWebappClassLoader {
+abstract class TestCustomWebappClassLoader {
 
 
     String home = new File(System.getProperty("user.home")).getAbsolutePath();
-    String warPath = home + "/.m2/repository/org/springframework/boot"
-            + "/spring-boot-deployment-test-tomcat/1.2.5.RELEASE/spring-boot-deployment-test-tomcat-1.2.5.RELEASE.war";
+    String warPath;
     String loaderClass;
     boolean unpackWARs;
+    WebappClassLoaderBase loader;
 
-
-    PrintStream out = System.out;
-
-
-    @Test
-    @Ignore
-    public void testTomcatLoaderUnpackWAR() throws Exception {
-        unpackWARs = true;
-        testWebappClassLoader();
-    }
-
-
-    @Test
-    @Ignore
-    public void testTomcatLoaderForWAR() throws Exception {
-        unpackWARs = false;
-        testWebappClassLoader();
-    }
-
-
-    @Test
-    @Ignore
-    public void testCustomLoaderUnpackWAR() throws Exception {
-        unpackWARs = true;
-        loaderClass = CustomWebappClassLoader.class.getName();
-        testWebappClassLoader();
-    }
-
-
-    @Test
-    @Ignore
-    public void testCustomLoaderForWAR() throws Exception {
-        unpackWARs = false;
-        loaderClass = CustomWebappClassLoader.class.getName();
-        testWebappClassLoader();
-    }
+    private PrintStream out = System.out;
 
 
     void testWebappClassLoader() throws Exception {
@@ -76,7 +39,7 @@ public class TestCustomWebappClassLoader {
         ctx.start();
         long end = System.currentTimeMillis();
 
-        WebappClassLoaderBase loader = (WebappClassLoaderBase) ctx.getLoader().getClassLoader();
+        loader = (WebappClassLoaderBase) ctx.getLoader().getClassLoader();
 
         out.print(""
                 + "\n"
@@ -97,12 +60,28 @@ public class TestCustomWebappClassLoader {
 
 
     private StandardContext newContext() {
+        org.apache.tomcat.util.file.ConfigFileLoader.setSource(
+                new org.apache.tomcat.util.file.ConfigurationSource() {
+                    @Override
+                    @SuppressWarnings("deprecation")
+                    public Resource getResource(String name) {
+                        return new Resource(new java.io.StringBufferInputStream("<x/>"), getURI(name));
+                    }
+
+                    @Override
+                    public URI getURI(String name) {
+                        return new File(name).toURI();
+                    }
+                }
+        );
+
         StandardContext ctx = new StandardContext();
+        ctx.setOverride(true);
 
         ctx.addLifecycleListener(new Tomcat.FixContextListener());
         ctx.addLifecycleListener(new ContextConfig());
 
-        String appBase = home + "/tmp/tomcat8-webapp-loader-test/test-host-webapps";
+        String appBase = home + "/tmp/tomcat-webapp-loader-test/WebApps";
         // noinspection ResultOfMethodCallIgnored
         new File(appBase).mkdirs();
 
@@ -115,10 +94,10 @@ public class TestCustomWebappClassLoader {
         ((Engine) ctx.getParent().getParent()).getService().getServer().setCatalinaHome(new File(home));
         ((Engine) ctx.getParent().getParent()).getService().getServer().setCatalinaBase(new File(home));
 
-        ctx.setName(warPath.replaceAll(".*/", ""));
+        ctx.setName(warPath.replaceAll(".*/|\\.war$", ""));
         ctx.setPath("/" + ctx.getName());
         ctx.setDocBase(warPath);
-        ctx.setWorkDir(home + "/tmp/tomcat8-webapp-loader-test/test-host-work");
+        ctx.setWorkDir(home + "/tmp/tomcat-webapp-loader-test/work/" + ctx.getName());
 
         if (loaderClass != null) {
             ctx.setLoader(new WebappLoader());

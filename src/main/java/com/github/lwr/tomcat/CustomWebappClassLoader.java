@@ -1,4 +1,4 @@
-package com.github.lwr.tomcat8;
+package com.github.lwr.tomcat;
 
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardContext;
@@ -51,7 +51,7 @@ public class CustomWebappClassLoader extends WebappClassLoaderBase {
     }
 
 
-    boolean jarWarExpanded;
+    private boolean jarWarExpanded;
 
     @Override
     public void start() throws LifecycleException {
