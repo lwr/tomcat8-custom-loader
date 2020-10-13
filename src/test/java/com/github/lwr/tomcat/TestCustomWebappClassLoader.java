@@ -28,7 +28,7 @@ abstract class TestCustomWebappClassLoader {
     boolean unpackWARs;
     WebappClassLoaderBase loader;
 
-    private PrintStream out = System.out;
+    private final PrintStream out = System.out;
 
 
     void testWebappClassLoader() throws Exception {

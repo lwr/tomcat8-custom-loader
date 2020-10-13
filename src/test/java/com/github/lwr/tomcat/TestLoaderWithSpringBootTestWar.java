@@ -4,13 +4,13 @@
 
 package com.github.lwr.tomcat;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.net.*;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * TestLoaderWithSpringBootTestWar.
@@ -26,7 +26,7 @@ public class TestLoaderWithSpringBootTestWar extends TestCustomWebappClassLoader
 
 
     @Test
-    @Ignore
+    @Disabled
     public void testTomcatLoaderUnpackWAR() throws Exception {
         unpackWARs = true;
         testWebappClassLoader();
@@ -34,7 +34,7 @@ public class TestLoaderWithSpringBootTestWar extends TestCustomWebappClassLoader
 
 
     @Test
-    @Ignore
+    @Disabled
     public void testTomcatLoaderForWAR() throws Exception {
         unpackWARs = false;
         testWebappClassLoader();
