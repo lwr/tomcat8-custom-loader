@@ -10,6 +10,7 @@ import org.apache.catalina.loader.WebappClassLoaderBase;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.startup.ContextConfig;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.tomcat.util.scan.StandardJarScanner;
 
 import java.io.*;
 import java.net.*;
@@ -44,8 +45,8 @@ abstract class TestCustomWebappClassLoader {
         out.print(""
                 + "\n"
                 + "=== Test Result ==================================\n"
-                + ": DocRoot              : " + loader.getResources().getResource("/").getURL() + "\n"
-                + ": Context load time    : " + (end - start) + "\n"
+                + ": DocRoot              : " + ctx.getResources().getResource("/").getURL() + "\n"
+                + ": Context start time   : " + (end - start) + "\n"
                 + ": HostSpot (loadClass) : " + ((loader instanceof CustomWebappClassLoader)
                 ? ((CustomWebappClassLoader) loader).hostSpotTime : "unknown") + "\n"
                 + "=== Dump JARs   ==================================\n"
@@ -65,7 +66,7 @@ abstract class TestCustomWebappClassLoader {
                     @Override
                     @SuppressWarnings("deprecation")
                     public Resource getResource(String name) {
-                        return new Resource(new java.io.StringBufferInputStream("<x/>"), getURI(name));
+                        return new Resource(new StringBufferInputStream("<x/>"), getURI(name));
                     }
 
                     @Override
@@ -75,24 +76,28 @@ abstract class TestCustomWebappClassLoader {
                 }
         );
 
+        Engine engine = new StandardEngine();
+        StandardHost host = new StandardHost();
         StandardContext ctx = new StandardContext();
         ctx.setOverride(true);
-
         ctx.addLifecycleListener(new Tomcat.FixContextListener());
         ctx.addLifecycleListener(new ContextConfig());
+        ctx.setParent(host);
 
         String appBase = home + "/tmp/tomcat-webapp-loader-test/WebApps";
         // noinspection ResultOfMethodCallIgnored
         new File(appBase).mkdirs();
 
-        ctx.setParent(new StandardHost());
-        ctx.getParent().setParent(new StandardEngine());
-        ((StandardHost) ctx.getParent()).setAppBase(appBase);
-        ((StandardHost) ctx.getParent()).setUnpackWARs(unpackWARs);
-        ((Engine) ctx.getParent().getParent()).setService(new StandardService());
-        ((Engine) ctx.getParent().getParent()).getService().setServer(new StandardServer());
-        ((Engine) ctx.getParent().getParent()).getService().getServer().setCatalinaHome(new File(home));
-        ((Engine) ctx.getParent().getParent()).getService().getServer().setCatalinaBase(new File(home));
+        host.setName("localhost");
+        host.setUnpackWARs(unpackWARs);
+        host.setAppBase(appBase);
+        host.setParent(engine);
+
+        engine.setName("Catalina");
+        engine.setService(new StandardService());
+        engine.getService().setServer(new StandardServer());
+        engine.getService().getServer().setCatalinaHome(new File(home));
+        engine.getService().getServer().setCatalinaBase(new File(home));
 
         ctx.setName(warPath.replaceAll(".*/|\\.war$", ""));
         ctx.setPath("/" + ctx.getName());
@@ -100,6 +105,11 @@ abstract class TestCustomWebappClassLoader {
         ctx.setWorkDir(home + "/tmp/tomcat-webapp-loader-test/work/" + ctx.getName());
 
         if (loaderClass != null) {
+            // workarounds this exception with <JarScanner scanClassPath="false" /> since tomcat 9.0.16
+            // > Caused by: java.lang.IllegalArgumentException: More than one fragment with the name [spring_web] was found. ...
+            // >         at org.apache.tomcat.util.descriptor.web.WebXml.orderWebFragments(WebXml.java:2275)
+            // >         ... ...
+            ((StandardJarScanner) ctx.getJarScanner()).setScanClassPath(false);
             ctx.setLoader(new WebappLoader());
             ((WebappLoader) ctx.getLoader()).setLoaderClass(loaderClass);
         }
